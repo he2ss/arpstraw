@@ -1,0 +1,5 @@
+frames/*.cap
+*.pyc
+*.pyo
+.idea/
+venv/
