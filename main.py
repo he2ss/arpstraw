@@ -12,8 +12,8 @@ from sniffer import sniffer_function
 from oracles import blacklist_oracle
 
 
-#if os.getuid() != 0:
-#    exit("Error: root permission is required to run this program !")
+if os.getuid() != 0:
+    exit("Error: root permission is required to run this program !")
 
 FORMAT = "%(asctime)-15s %(message)s"
 logging.basicConfig(filename='arpstraw.log', filemode='a', level=logging.INFO, format=FORMAT)
@@ -69,15 +69,14 @@ def main():
 
     while True:
         try:
-            payload, item = decision_queue.get(timeout=1)
+            message = decision_queue.get(timeout=1)
         except Queue.Empty:
             if consumer_evt.is_set():
                 break
             else:
                 continue
-        msg = 'Query match with payload \'' + payload + '\':\n' + item
-        print(msg)
-        logging.info(msg)
+        print(message)
+        logging.info(message)
 
     sniffer.join()
     worker.join()
