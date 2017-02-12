@@ -20,7 +20,7 @@ FORMAT = "%(asctime)-15s %(message)s"
 logging.basicConfig(filename='arpstraw.log', filemode='a', level=logging.INFO, format=FORMAT)
 
 
-parser = argparse.ArgumentParser(description='SQL Straw')
+parser = argparse.ArgumentParser(description='ARP Straw')
 parser.add_argument('-f', '--file', default=None, type=argparse.FileType('r'), help="Specify file to analyse")
 parser.add_argument('-i', '--interface', default=None, type=str, help="Specify interface eth0|lo|eth1 ...")
 args = parser.parse_args()
