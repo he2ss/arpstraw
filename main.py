@@ -69,13 +69,18 @@ def main():
 
     while True:
         try:
-            attacker_ip, attacker_mac, victim, victim_ip, victim_mac = decision_queue.get(timeout=1)
+            spoof_info = decision_queue.get(timeout=1)
         except Queue.Empty:
             if consumer_evt.is_set():
                 break
             else:
                 continue
-        msg = "Alert : arpspoofing detected [attacker ip/mac : %s/%s] [victim (%s) ip/mac : %s/%s]" % (attacker_ip, attacker_mac, victim, victim_ip, victim_mac)
+        msg = "Alert : arpspoofing detected [attacker ip/mac : %s/%s] [victim (%s) ip/mac : %s/%s]" \
+              % (spoof_info['attacker_ip'],
+                 spoof_info['attacker_mac'],
+                 spoof_info['victim'],
+                 spoof_info['victim_ip'],
+                 spoof_info['victim_mac'])
         print(msg)
         logging.info(msg)
 
