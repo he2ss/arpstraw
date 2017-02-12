@@ -5,6 +5,7 @@ import collections
 import ConfigParser
 import os
 from multiprocessing import Process, Queue as MPQueue, Event
+import ethip
 
 import netifaces
 
