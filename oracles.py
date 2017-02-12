@@ -20,7 +20,7 @@ def blacklist_oracle(arp_lines_queue, config_dico, decision_queue, prod_evt, evt
         for host, info in config_dico.items():
             if item['ip'] == info['ip']:
                 if item['mac'].lower() != info['mac'].lower():
-                    decision_queue.put("Alert : arpspoofing detected [attacker ip/mac : %s/%s] [victim (%s) ip/mac : %s/%s]" % (item['ip'], item['mac'], host, info['ip'], info['mac']))
+                    decision_queue.put((item['ip'], item['mac'], host, info['ip'], info['mac']))
             else:
                 continue
     evt.set()
