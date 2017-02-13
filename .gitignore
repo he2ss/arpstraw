@@ -3,3 +3,5 @@ frames/*.cap
 *.pyo
 .idea/
 venv/
+arpstraw.cfg
+arpstraw.log
