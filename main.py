@@ -50,7 +50,7 @@ layer.LayerFieldsContainer = LayerFieldsContainer
 
 def notif(msg):
     Notify.init("ArpStraw")
-    notice = Notify.Notification("Critical !", msg)
+    notice = Notify.Notification.new("Critical !", msg)
     notice.set_urgency(2)
     notice.show()
 
