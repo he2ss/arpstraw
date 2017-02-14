@@ -4,6 +4,8 @@ import Queue
 import collections
 import ConfigParser
 import os
+from subprocess import call
+from gi.repository import Notify
 from multiprocessing import Process, Queue as MPQueue, Event
 import ethip
 
@@ -46,6 +48,17 @@ class LayerFieldsContainer(layer.LayerFieldsContainer):
 layer.LayerFieldsContainer = LayerFieldsContainer
 
 
+def notif(msg):
+    Notify.init("ArpStraw")
+    notice = Notify.Notification("Critical !", msg)
+    notice.set_urgency(2)
+    notice.show()
+
+    # I have issue with pynotify and mint :'(, so i use notify-send
+    #call(["notify-send", "-u", "critical", msg])
+    logging.info(msg)
+
+
 def main():
 
     if args.file is None:
@@ -82,8 +95,7 @@ def main():
                  spoof_info['victim'],
                  spoof_info['victim_ip'],
                  spoof_info['victim_mac'])
-        print(msg)
-        logging.info(msg)
+        notif(msg)
 
     sniffer.join()
     worker.join()
