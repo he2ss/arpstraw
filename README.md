@@ -14,7 +14,7 @@ git clone https://github.com/he2ss/arpstraw.git
 pip install -r requirements.txt
 ```
 
-Before the usage, you must copy the ```template.cfg``` file and rename it to ```arpspoof.cfg``` and specify the hosts you know on you network. For example your router ip/mac addresses and other hosts you want.
+Before the usage, you must copy the ```template.cfg``` file and rename it to ```arpspoof.cfg``` and specify the hosts you know on your network. For example your router ip/mac addresses and other hosts you want.
 
 Usage
 ----
@@ -27,6 +27,6 @@ To launch detection on a interface :
 
     sudo python main.py -i eth0
 
-To launch detction on a pcap : 
+To launch detection on a pcap : 
     
     sudo python main.py -f myfile.pcap
