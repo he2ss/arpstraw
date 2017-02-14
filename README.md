@@ -1,6 +1,6 @@
 # ARPStraw
 
-arpstraw is an open source [![MITM](https://en.wikipedia.org/wiki/Man-in-the-middle_attack)] detection tool that notify user when it detect an ArpSpoof attack. It rests on a config file ```arpstraw.cfg``` where you can specify each host you know in your network.
+arpstraw is an open source [[MITM](https://en.wikipedia.org/wiki/Man-in-the-middle_attack)] detection tool that notify user when it detect an ArpSpoof attack. It rests on a config file ```arpstraw.cfg``` where you can specify each host you know in your network.
 
 Installation
 ----
