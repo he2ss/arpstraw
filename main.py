@@ -12,7 +12,7 @@ from multiprocessing import Process, Queue as MPQueue, Event
 import netifaces
 
 from sniffer import sniffer_function
-from oracles import blacklist_oracle
+from oracle import compare_oracle
 
 
 if os.getuid() != 0:
@@ -90,7 +90,7 @@ def main():
     consumer_evt = Event()
 
     sniffer = Process(name='sniffer', target=sniffer_function, args=(args.file, arp_lines_queue, args.interface, producer_evt))
-    worker = Process(name='worker', target=blacklist_oracle, args=(arp_lines_queue, conf_dico, decision_queue, producer_evt, consumer_evt))
+    worker = Process(name='worker', target=compare_oracle, args=(arp_lines_queue, conf_dico, decision_queue, producer_evt, consumer_evt))
 
     sniffer.start()
     worker.start()
