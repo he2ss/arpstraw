@@ -22,7 +22,7 @@ def blacklist_oracle(arp_lines_queue, config_dico, decision_queue, prod_evt, evt
                 continue
             if item['ip'] == info['ip']:
                 if item['mac'].lower() != info['mac'].lower():
-                    spoof_info['attacker_ip'] = ethip.getip(item['mac'], config_dico['network']['netmask'])
+                    spoof_info['attacker_ip'] = ethip.getip(item['mac'], config_dico['network']['ip'])
                     spoof_info['attacker_mac'] = item['mac']
                     spoof_info['victim'] = host
                     spoof_info['victim_ip'] = info['ip']
