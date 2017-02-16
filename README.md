@@ -14,7 +14,7 @@ git clone https://github.com/he2ss/arpstraw.git
 pip install -r requirements.txt
 ```
 
-Before the usage, you must copy the ```template.cfg``` file and rename it to ```arpspoof.cfg``` and specify the hosts you know on your network. For example your router ip/mac addresses and other hosts you want.
+Before the usage, you must copy the ```template.cfg``` file and rename it to ```arpstraw.cfg``` and specify the hosts you know on your network. For example your router ip/mac addresses and other hosts you want.
 
 Usage
 ----

@@ -4,10 +4,8 @@ import Queue
 import collections
 import ConfigParser
 import os
-from subprocess import call
 from gi.repository import Notify
 from multiprocessing import Process, Queue as MPQueue, Event
-import ethip
 
 import netifaces
 
@@ -28,11 +26,16 @@ parser.add_argument('-i', '--interface', default=None, type=str, help="Specify i
 args = parser.parse_args()
 
 config = ConfigParser.ConfigParser()
-config.read('arpstraw.cfg')
-conf_dico = collections.defaultdict(lambda: collections.defaultdict())
-for section in config.sections():
-    for item in config.options(section):
-        conf_dico[section][item] = config.get(section, item)
+if os.path.exists('arpstraw.cfg'):
+    config.read('arpstraw.cfg')
+    conf_dico = collections.defaultdict(lambda: collections.defaultdict())
+    for section in config.sections():
+        for item in config.options(section):
+            conf_dico[section][item] = config.get(section, item)
+else:
+    exit("Error : can't open arpstraw.cfg file !")
+    logging.info("Error : can't open arpstraw.cfg file !")
+
 
 from pyshark.packet import layer
 
@@ -52,11 +55,20 @@ def notif(msg):
     Notify.init("ArpStraw")
     notice = Notify.Notification.new("Critical !", msg)
     notice.set_urgency(2)
+    #Adding callback feature but not work because of reinitialisation of the object
+    #Need to check if we can register objects in list to recall them.
+    notice.add_action(
+        "action_click",
+        "Find attacker IP and flood him",
+        attack,
+        "Test"
+    )
     notice.show()
-
-    # I have issue with pynotify and mint :'(, so i use notify-send
-    #call(["notify-send", "-u", "critical", msg])
     logging.info(msg)
+
+
+def attack(msg):
+    print(msg)
 
 
 def main():
