@@ -3,8 +3,8 @@ import ethip
 import os
 
 
-def find_ip(attacker_mac, victim_mac):
-    ip = os.system("arp -n | grep -v %s |grep %s | awk '{print $1}'" % victim_ip, attacker_mac)
+def find_ip(attacker_mac, victim_ip):
+    ip = os.system("arp -n | grep -v %s |grep %s | awk '{print $1}'" % (victim_ip, attacker_mac))
     return ip
 
 
