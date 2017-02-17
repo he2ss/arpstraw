@@ -4,9 +4,8 @@ import ethip
 
 def compare_oracle(arp_lines_queue, config_dico, decision_queue, prod_evt, evt):
     """
-    this function print what it get from the queue,
-    if the payload match in the query
-    :return:
+    this function put alert message in queue if it find different mac from same IP between cfg file packet info
+    :return: dict()
     """
     spoof_info = dict()
     while True:
