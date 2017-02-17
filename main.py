@@ -95,9 +95,10 @@ def main():
     sniffer.start()
     worker.start()
 
+    is_attacked = False
     while True:
         try:
-            spoof_info = decision_queue.get(timeout=1)
+            spoof_info, cpt = decision_queue.get(timeout=1)
         except Queue.Empty:
             if consumer_evt.is_set():
                 break
@@ -110,6 +111,12 @@ def main():
                  spoof_info['victim_ip'],
                  spoof_info['victim_mac'])
         notif(msg)
+        if cpt > 5 and not is_attacked:
+            attack(spoof_info['attacker_ip'])
+            notif('The attacker was counter-attacked ! ')
+            os.system('arptables -A INPUT -s %s -j DROP' % spoof_info['attacker_ip'])
+            notif('Your are now protected from the attacker %s' % spoof_info['attacker_ip'])
+            is_attacked = True
 
     sniffer.join()
     worker.join()
