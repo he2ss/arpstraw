@@ -4,7 +4,7 @@ import os
 
 
 def find_ip(attacker_mac, victim_mac):
-    ip = os.system("arp -n | grep -v %s |grep %s | awk '{print $1}'" % victim_mac, attacker_mac)
+    ip = os.system("arp -n | grep -v %s |grep %s | awk '{print $1}'" % victim_ip, attacker_mac)
     return ip
 
 
@@ -28,7 +28,7 @@ def compare_oracle(arp_lines_queue, config_dico, decision_queue, prod_evt, evt):
                 continue
             if item['ip'] == info['ip']:
                 if item['mac'].lower() != info['mac'].lower():
-                    spoof_info['attacker_ip'] = find_ip(item['mac'], info['mac'])
+                    spoof_info['attacker_ip'] = find_ip(item['mac'], info['ip'])
                     spoof_info['attacker_mac'] = item['mac']
                     spoof_info['victim'] = host
                     spoof_info['victim_ip'] = info['ip']
