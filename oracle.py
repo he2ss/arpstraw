@@ -1,10 +1,10 @@
 import Queue
 import ethip
-import os
+import commands
 
 
 def find_ip(attacker_mac, victim_ip):
-    ip = os.system("arp -n | grep -v %s |grep %s | awk '{print $1}'" % (victim_ip, attacker_mac))
+    status, ip = commands.getstatusoutput("arp -n | grep -v %s |grep %s | awk '{print $1}'" % (victim_ip, attacker_mac))
     return ip
 
 

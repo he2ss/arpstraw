@@ -121,7 +121,7 @@ def main():
         if cpt > 5 and not is_attacked:
             attack(spoof_info['attacker_ip'])
             notif('The attacker was counter-attacked ! ')
-            os.system('iptables -I INPUT -s %s -j DROP' % spoof_info['attacker_ip'])
+            os.system('iptables -I INPUT -s %s -j DROP > /dev/null 2>&1' % spoof_info['attacker_ip'])
             notif('Your are now protected from the attacker %s' % spoof_info['attacker_ip'])
             is_attacked = True
 
