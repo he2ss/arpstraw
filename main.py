@@ -4,44 +4,16 @@ import Queue
 import collections
 import ConfigParser
 import os
-import socket
-import random
-import gi
-gi.require_version('Notify', '0.7')
-from gi.repository import Notify
 from multiprocessing import Process, Queue as MPQueue, Event
-
 import netifaces
+import re
 
-from sniffer import sniffer_function
-from oracle import compare_oracle
-
-
-if os.getuid() != 0:
-    exit("Error: root permission is required to run this program !")
-
-FORMAT = "%(asctime)-15s %(message)s"
-logging.basicConfig(filename='arpstraw.log', filemode='a', level=logging.INFO, format=FORMAT)
-
-
-parser = argparse.ArgumentParser(description='ARP Straw')
-parser.add_argument('-f', '--file', default=None, type=argparse.FileType('r'), help="Specify file to analyse")
-parser.add_argument('-i', '--interface', default=None, type=str, help="Specify interface eth0|lo|eth1 ...")
-args = parser.parse_args()
-
-config = ConfigParser.ConfigParser()
-if os.path.exists('arpstraw.cfg'):
-    config.read('arpstraw.cfg')
-    conf_dico = collections.defaultdict(lambda: collections.defaultdict())
-    for section in config.sections():
-        for item in config.options(section):
-            conf_dico[section][item] = config.get(section, item)
-else:
-    exit("Error : can't open arpstraw.cfg file !")
-    logging.info("Error : can't open arpstraw.cfg file !")
-
+from sniffer import arp_parser, sql_parser
+from oracle import arp_oracle, sql_oracle
 
 from pyshark.packet import layer
+
+FIELDS = ['host', 'method', 'uri', 'user_agent', 'ip_src', 'ip_dst']
 
 
 class LayerFieldsContainer(layer.LayerFieldsContainer):
@@ -55,29 +27,30 @@ class LayerFieldsContainer(layer.LayerFieldsContainer):
 layer.LayerFieldsContainer = LayerFieldsContainer
 
 
-def notif(msg):
-    Notify.init("ArpStraw")
-    notice = Notify.Notification.new("Critical !", msg)
-    notice.set_urgency(2)
-    #Adding callback feature but not work because of reinitialisation of the object
-    #Need to check if we can register objects in list to recall them.
-    notice.add_action(
-        "action_click",
-        "Find attacker IP and flood him",
-        attack,
-        "Test"
-    )
-    notice.show()
-    logging.info(msg)
+#if os.getuid() != 0:
+#    exit("Error: root permission is required to run this program !")
+
+FORMAT = "%(asctime)-15s %(message)s"
+logging.basicConfig(filename='arpstraw.log', filemode='a', level=logging.INFO, format=FORMAT)
 
 
-def attack(ip, port=53):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    bytes = random._urandom(1024)
+parser = argparse.ArgumentParser(description='Angry ')
+parser.add_argument('-f', '--file', default=None, type=argparse.FileType('r'), help="Specify file to analyse")
+parser.add_argument('-i', '--interface', default=None, type=str, help="Specify interface eth0|lo|eth1 ...")
+parser.add_argument('-mod', '--module', default='arp', type=str, help="Specify module ( arp | sql )", required=True)
+args = parser.parse_args()
 
-    while 1:
-        sock.sendto(bytes, (ip, port))
-        sent= sent + 1
+config = ConfigParser.ConfigParser()
+if args.module is "arp":
+    if os.path.exists('arpstraw.cfg'):
+        config.read('arpstraw.cfg')
+        conf_dico = collections.defaultdict(lambda: collections.defaultdict())
+        for section in config.sections():
+            for item in config.options(section):
+                conf_dico[section][item] = config.get(section, item)
+    else:
+        exit("Error : can't open arpstraw.cfg file !")
+        logging.info("Error : can't open arpstraw.cfg file !")
 
 
 def main():
@@ -91,39 +64,65 @@ def main():
                 print('ERROR: please specify a valid interface : \n%s' % ' | '.join(interfaces))
                 return
 
-    arp_lines_queue = MPQueue()
+    lines_queue = MPQueue()
     decision_queue = MPQueue()
     producer_evt = Event()
     consumer_evt = Event()
 
-    sniffer = Process(name='sniffer', target=sniffer_function, args=(args.file, arp_lines_queue, args.interface, producer_evt))
-    worker = Process(name='worker', target=compare_oracle, args=(arp_lines_queue, conf_dico, decision_queue, producer_evt, consumer_evt))
+    if args.module == "arp":
+        sniffer = Process(name='sniffer', target=arp_parser, args=(args.file, lines_queue, args.interface, producer_evt))
+        worker = Process(name='worker', target=arp_oracle, args=(lines_queue, conf_dico, decision_queue, producer_evt, consumer_evt))
+    if args.module == "sql":
+        re_list = open('lists/re_sql.txt', 'r')
+        re_dict = {}
+        compiled_list = []
+        nb_line = 0
+        for regex in re_list.readlines():
+            nb_line += 1
+            if regex.startswith("#"):
+                continue
+            if regex.startswith("!"):
+                fields = regex[1:].split(":")
+                fields[0] = fields[0].lower()
+                if fields[0] in FIELDS:
+                    re_dict[fields[0]] = re.compile(fields[1].strip(), re.IGNORECASE)
+                else:
+                    parser.error("Field ( %s ) doesn't exist, line %s" % (fields[0], nb_line))
+            try:
+                compiled_list.append(re_dict)
+                re_dict = {}
+            except Exception as e:
+                print(e)
+                exit(0)
+        sniffer = Process(name='sniffer', target=sql_parser, args=(args.file, lines_queue, args.interface, producer_evt))
+        worker = Process(name='worker', target=sql_oracle, args=(lines_queue, decision_queue, compiled_list, producer_evt, consumer_evt))
 
     sniffer.start()
     worker.start()
 
-    is_attacked = False
     while True:
         try:
-            spoof_info, cpt = decision_queue.get(timeout=1)
+            dict_info = decision_queue.get(timeout=1)
         except Queue.Empty:
             if consumer_evt.is_set():
                 break
             else:
                 continue
-        msg = "Alert : arpspoofing detected [attacker ip/mac : %s/%s] [victim (%s) ip/mac : %s/%s]" \
-              % (spoof_info['attacker_ip'],
-                 spoof_info['attacker_mac'],
-                 spoof_info['victim'],
-                 spoof_info['victim_ip'],
-                 spoof_info['victim_mac'])
-        notif(msg)
-        if cpt > 5 and not is_attacked:
-            attack(spoof_info['attacker_ip'])
-            notif('The attacker was counter-attacked ! ')
-            os.system('iptables -I INPUT -s %s -j DROP > /dev/null 2>&1' % spoof_info['attacker_ip'])
-            notif('Your are now protected from the attacker %s' % spoof_info['attacker_ip'])
-            is_attacked = True
+        if args.module == "arp":
+            msg = "[alert] : arpspoofing detected [attacker ip/mac : %s/%s] [victim (%s) ip/mac : %s/%s]" \
+                  % (dict_info['attacker_ip'],
+                     dict_info['attacker_mac'],
+                     dict_info['victim'],
+                     dict_info['victim_ip'],
+                     dict_info['victim_mac'])
+        if args.module == "sql":
+            msg = "[alert] : sql injection detected [ip_src : %s] [ip_dst : %s] [%s : %s]" \
+                  % (dict_info['ip_src'],
+                     dict_info['ip_dst'],
+                     dict_info['field'],
+                     dict_info[dict_info['field']])
+        logging.warning(msg)
+        print(msg)
 
     sniffer.join()
     worker.join()
